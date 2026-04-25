@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const getLoadsSchema = z.object({
+  query: z.object({
+    limit: z.string().optional(),
+    page: z.string().optional(),
+  }),
+});
+
 export const acceptLoadSchema = z.object({
   body: z.object({
     driverId: z.string().min(1),

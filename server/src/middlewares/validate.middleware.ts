@@ -3,10 +3,6 @@ import { Request, Response, NextFunction } from "express";
 import { ApiError } from "@/utils/apiError";
 import { StatusCodes } from "@/utils/statusCodes";
 
-import { createLoadSchema } from "@/validations/load.validation";
-
-console.log("create load schema", createLoadSchema);
-
 export const validate =
   (schema: ZodType) => (req: Request, res: Response, next: NextFunction) => {
     try {

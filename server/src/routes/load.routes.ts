@@ -5,11 +5,16 @@ import { loadController } from "@/controllers/load.controller";
 import {
   acceptLoadSchema,
   createLoadSchema,
+  getLoadsSchema,
 } from "@/validations/load.validation";
 
 const router = express.Router();
 
-router.get("/", asyncHandler(loadController.getLoads));
+router.get(
+  "/",
+  validate(getLoadsSchema),
+  asyncHandler(loadController.getLoads),
+);
 
 router.post(
   "/",
