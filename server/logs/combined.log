@@ -1,0 +1,28 @@
+{"level":"info","message":"Attempting to connect to MongoDB at mongodb+srv://surajguvajuprogrammer_db_user:8nUmbrctUokhPOP7@bhariya.t5jlknf.mongodb.net/?appName=Bhariya","service":"backend-service","timestamp":"2026-04-25T07:25:18.641Z"}
+{"level":"info","message":"Environment Variables: PORT=8080, BASE_URL=http://localhost:8080/api/v1, MONGO_URI=mongodb+srv://surajguvajuprogrammer_db_user:8nUmbrctUokhPOP7@bhariya.t5jlknf.mongodb.net/?appName=Bhariya","service":"backend-service","timestamp":"2026-04-25T07:25:18.646Z"}
+{"level":"info","message":"Server will start at http://localhost:8080/api/v1","service":"backend-service","timestamp":"2026-04-25T07:25:18.647Z"}
+{"level":"info","message":"Starting server on port 8080","service":"backend-service","timestamp":"2026-04-25T07:25:18.648Z"}
+{"level":"info","message":"MongoDB Connected: ac-hcpyjif-shard-00-02.t5jlknf.mongodb.net","service":"backend-service","timestamp":"2026-04-25T07:25:21.183Z"}
+{"level":"info","message":"Attempting to connect to MongoDB at mongodb+srv://surajguvajuprogrammer_db_user:8nUmbrctUokhPOP7@bhariya.t5jlknf.mongodb.net/?appName=Bhariya","service":"backend-service","timestamp":"2026-04-25T07:26:03.129Z"}
+{"level":"info","message":"Environment Variables: PORT=8080, BASE_URL=http://localhost:8080/api/v1, MONGO_URI=mongodb+srv://surajguvajuprogrammer_db_user:8nUmbrctUokhPOP7@bhariya.t5jlknf.mongodb.net/?appName=Bhariya","service":"backend-service","timestamp":"2026-04-25T07:26:03.133Z"}
+{"level":"info","message":"Server will start at http://localhost:8080/api/v1","service":"backend-service","timestamp":"2026-04-25T07:26:03.134Z"}
+{"level":"info","message":"Starting server on port 8080","service":"backend-service","timestamp":"2026-04-25T07:26:03.135Z"}
+{"level":"info","message":"MongoDB Connected: ac-hcpyjif-shard-00-02.t5jlknf.mongodb.net","service":"backend-service","timestamp":"2026-04-25T07:26:09.729Z"}
+{"level":"info","message":"Attempting to connect to MongoDB at mongodb+srv://surajguvajuprogrammer_db_user:8nUmbrctUokhPOP7@bhariya.t5jlknf.mongodb.net/?appName=Bhariya","service":"backend-service","timestamp":"2026-04-25T07:26:54.503Z"}
+{"level":"info","message":"MongoDB Connected: ac-hcpyjif-shard-00-02.t5jlknf.mongodb.net","service":"backend-service","timestamp":"2026-04-25T07:26:56.023Z"}
+{"level":"info","message":"Attempting to connect to MongoDB at mongodb+srv://surajguvajuprogrammer_db_user:8nUmbrctUokhPOP7@bhariya.t5jlknf.mongodb.net/?appName=Bhariya","service":"backend-service","timestamp":"2026-04-25T07:27:28.121Z"}
+{"level":"info","message":"Server running on port 8080","service":"backend-service","timestamp":"2026-04-25T07:27:28.155Z"}
+{"level":"info","message":"MongoDB Connected: ac-hcpyjif-shard-00-02.t5jlknf.mongodb.net","service":"backend-service","timestamp":"2026-04-25T07:27:30.069Z"}
+info: Attempting to connect to MongoDB at mongodb+srv://surajguvajuprogrammer_db_user:8nUmbrctUokhPOP7@bhariya.t5jlknf.mongodb.net/?appName=Bhariya {"service":"backend-service","timestamp":"2026-04-25T07:28:36.163Z"}
+info: Server running on port 8080 {"service":"backend-service","timestamp":"2026-04-25T07:28:36.182Z"}
+info: MongoDB Connected: ac-hcpyjif-shard-00-00.t5jlknf.mongodb.net {"service":"backend-service","timestamp":"2026-04-25T07:28:37.936Z"}
+{"level":"info","message":"Attempting to connect to MongoDB at mongodb+srv://surajguvajuprogrammer_db_user:8nUmbrctUokhPOP7@bhariya.t5jlknf.mongodb.net/?appName=Bhariya","service":"backend-service","timestamp":"2026-04-25T07:29:21.305Z"}
+{"level":"info","message":"Server running on port 8080","service":"backend-service","timestamp":"2026-04-25T07:29:21.331Z"}
+{"level":"info","message":"MongoDB Connected: ac-hcpyjif-shard-00-02.t5jlknf.mongodb.net","service":"backend-service","timestamp":"2026-04-25T07:29:22.278Z"}
+{"level":"info","message":"Attempting to connect to MongoDB at mongodb+srv://surajguvajuprogrammer_db_user:8nUmbrctUokhPOP7@bhariya.t5jlknf.mongodb.net/?appName=Bhariya","service":"backend-service","timestamp":"2026-04-25T08:16:17.290Z"}
+{"level":"info","message":"Server running on port 8080","service":"backend-service","timestamp":"2026-04-25T08:16:17.314Z"}
+{"level":"info","message":"MongoDB Connected: ac-hcpyjif-shard-00-02.t5jlknf.mongodb.net","service":"backend-service","timestamp":"2026-04-25T08:16:20.379Z"}
+{"level":"info","message":{"method":"GET","time":"2026-04-25T08:17:03.057Z","url":"/api/loads"},"service":"backend-service","timestamp":"2026-04-25T08:17:03.057Z"}
+{"level":"info","message":"Attempting to connect to MongoDB at mongodb+srv://surajguvajuprogrammer_db_user:8nUmbrctUokhPOP7@bhariya.t5jlknf.mongodb.net/?appName=Bhariya","service":"backend-service","timestamp":"2026-04-25T08:18:50.836Z"}
+{"level":"info","message":"Server running on port 8080","service":"backend-service","timestamp":"2026-04-25T08:18:50.875Z"}
+{"level":"info","message":"MongoDB Connected: ac-hcpyjif-shard-00-00.t5jlknf.mongodb.net","service":"backend-service","timestamp":"2026-04-25T08:19:00.699Z"}
