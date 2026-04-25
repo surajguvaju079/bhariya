@@ -1,11 +1,10 @@
 import mongoose, { Document } from "mongoose";
-import { time } from "node:console";
 export type LoadStatus = "PENDING" | "ACCEPTED" | "REJECTED";
 
 export interface ILoad extends Document {
   origin: string;
   destination: string;
-  weigth: number;
+  weight: number;
   vehicleTypeRequired: string;
   price: number;
   status: LoadStatus;
@@ -16,7 +15,7 @@ const loadSchema = new mongoose.Schema<ILoad>(
   {
     origin: { type: String, required: true },
     destination: { type: String, required: true },
-    weigth: { type: Number, required: true },
+    weight: { type: Number, required: true },
     vehicleTypeRequired: { type: String, required: true },
     price: { type: Number, required: true },
     status: {

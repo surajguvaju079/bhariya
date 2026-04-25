@@ -1,11 +1,14 @@
-import { AnyZodObject } from "zod";
+import { ZodType } from "zod";
 import { Request, Response, NextFunction } from "express";
-import { ApiError } from "../utils/apiError";
-import { StatusCodes } from "../utils/statusCodes";
+import { ApiError } from "@/utils/apiError";
+import { StatusCodes } from "@/utils/statusCodes";
+
+import { createLoadSchema } from "@/validations/load.validation";
+
+console.log("create load schema", createLoadSchema);
 
 export const validate =
-  (schema: AnyZodObject) =>
-  (req: Request, res: Response, next: NextFunction) => {
+  (schema: ZodType) => (req: Request, res: Response, next: NextFunction) => {
     try {
       schema.parse({
         body: req.body,
@@ -16,7 +19,7 @@ export const validate =
     } catch (error: any) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        error.errors?.[0]?.message || "Validation error",
+        error.errors?.[0]?.message || error || "Validation error",
       );
     }
   };

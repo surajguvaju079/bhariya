@@ -2,11 +2,20 @@ import express from "express";
 import { asyncHandler } from "@/middlewares/asyncHandler.middleware";
 import { validate } from "@/middlewares/validate.middleware";
 import { loadController } from "@/controllers/load.controller";
-import { acceptLoadSchema } from "@/validations/load.validation";
+import {
+  acceptLoadSchema,
+  createLoadSchema,
+} from "@/validations/load.validation";
 
 const router = express.Router();
 
 router.get("/", asyncHandler(loadController.getLoads));
+
+router.post(
+  "/",
+  validate(createLoadSchema),
+  asyncHandler(loadController.createLoad),
+);
 
 router.patch(
   "/:id/accept",

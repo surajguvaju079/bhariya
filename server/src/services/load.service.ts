@@ -2,10 +2,10 @@ import { LOAD_STATUS } from "@/constants/loadStatus";
 import { ILoad, Load } from "@/models/load.model";
 import { ApiError } from "@/utils/apiError";
 import { StatusCodes } from "@/utils/statusCodes";
-
+import { CreateLoadInput } from "@/validations/load.validation";
 export class LoadService {
   public async getPendingLoads(): Promise<ILoad[]> {
-    const loads = Load.find({ status: "pending" });
+    const loads = Load.find({ status: "PENDING" });
     return loads;
   }
 
@@ -30,6 +30,12 @@ export class LoadService {
 
     return load;
   }
+
+  async createLoad(loadData: CreateLoadInput): Promise<ILoad> {
+    const load = new Load(loadData);
+    await load.save();
+    return load;
+  }
 }
 
-export const loadService = new LoadService();
+export const loadServ = new LoadService();
