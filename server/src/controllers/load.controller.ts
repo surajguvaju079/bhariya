@@ -4,8 +4,16 @@ import { StatusCodes } from "@/utils/statusCodes";
 
 export class LoadController {
   public async getLoads(req: Request, res: Response) {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
+    const rawPage = req.query.page;
+    const rawLimit = req.query.limit;
+    const page =
+      rawPage === undefined || rawPage === null || rawPage === ""
+        ? 1
+        : Number(rawPage);
+    const limit =
+      rawLimit === undefined || rawLimit === null || rawLimit === ""
+        ? 10
+        : Number(rawLimit);
 
     const loads = await loadServ.getPendingLoads(page, limit);
     res.status(StatusCodes.OK).json({ success: true, data: loads });
