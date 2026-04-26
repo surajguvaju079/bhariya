@@ -1,20 +1,33 @@
 import { Load } from "@/api/load";
 import AppHeader from "@/components/Header";
 import { toastConfig } from "@/components/ToastConfig";
-import React, { useEffect, useState } from "react";
+import { C } from "@/constants/IndexColor";
+import * as Location from "expo-location";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
   ActivityIndicator,
+  FlatList,
+  ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import { C } from "@/constants/IndexColor";
+
+// ─── Radius options ───────────────────────────────────────────────────────────
+// null = "All" mode (no location filter)
+const RADIUS_OPTIONS: { label: string; value: number | null }[] = [
+  { label: "All", value: null },
+  { label: "10 km", value: 10 },
+  { label: "50 km", value: 50 },
+  { label: "100 km", value: 100 },
+];
 
 const LIMIT = 10;
+
+type UserCoords = { lat: number; lng: number } | null;
 
 function LoadsScreen() {
   const [loads, setLoads] = useState<any[]>([]);
@@ -24,16 +37,78 @@ function LoadsScreen() {
   const [hasMore, setHasMore] = useState(true);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
-  const fetchLoads = async (pageToFetch = 1, isLoadMore = false) => {
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationGranted, setLocationGranted] = useState(false);
+  const coordsRef = useRef<UserCoords>(null);
+
+  const [selectedRadius, setSelectedRadius] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== "granted") {
+          Toast.show({
+            type: "info",
+            text1: "Location not enabled",
+            text2: "Showing all loads. Enable location for nearby filter.",
+          });
+          setLocationLoading(false);
+          fetchLoads(1, false, null, null);
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        const coords = {
+          lat: location.coords.latitude,
+          lng: location.coords.longitude,
+        };
+
+        coordsRef.current = coords;
+        setLocationGranted(true);
+        setLocationLoading(false);
+
+        setSelectedRadius(10);
+        fetchLoads(1, false, coords, 10);
+      } catch {
+        setLocationLoading(false);
+        fetchLoads(1, false, null, null);
+      }
+    })();
+  }, []);
+
+  const fetchLoads = async (
+    pageToFetch: number,
+    isLoadMore: boolean,
+    coords: UserCoords | undefined,
+    radius: number | null | undefined,
+  ) => {
     try {
       if (isLoadMore) setLoadingMore(true);
       else setLoading(true);
 
-      const res = await Load.show(pageToFetch, LIMIT);
-      const newLoads = res.data.data.loads;
+      const resolvedCoords = coords !== undefined ? coords : coordsRef.current;
+      const resolvedRadius = radius !== undefined ? radius : selectedRadius;
+
+      const passCoords =
+        resolvedRadius !== null && resolvedCoords ? resolvedCoords : null;
+
+      const res = await Load.show(
+        pageToFetch,
+        LIMIT,
+        passCoords?.lat,
+        passCoords?.lng,
+        resolvedRadius ?? undefined,
+      );
+
+      const { loads: newLoads, pagination } = res.data.data;
 
       setLoads((prev) => (isLoadMore ? [...prev, ...newLoads] : newLoads));
-      setHasMore(res.data.data.pagination.hasMore);
+      setHasMore(pagination.hasMore);
       setPage(pageToFetch);
     } catch (err: any) {
       Toast.show({
@@ -48,13 +123,16 @@ function LoadsScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchLoads(1);
-  }, []);
+  const handleRadiusSelect = (radius: number | null) => {
+    if (radius === selectedRadius) return;
+    setSelectedRadius(radius);
+    setLoads([]);
+    fetchLoads(1, false, coordsRef.current, radius);
+  };
 
   const handleLoadMore = () => {
     if (!hasMore || loadingMore) return;
-    fetchLoads(page + 1, true);
+    fetchLoads(page + 1, true, undefined, undefined);
   };
 
   const handleAccept = async (id: string) => {
@@ -75,11 +153,13 @@ function LoadsScreen() {
     }
   };
 
-  if (loading) {
+  if (locationLoading || loading) {
     return (
       <SafeAreaView style={styles.centered}>
         <ActivityIndicator size="large" color={C.accent} />
-        <Text style={styles.loadingText}>Fetching loads...</Text>
+        <Text style={styles.loadingText}>
+          {locationLoading ? "Getting your location..." : "Fetching loads..."}
+        </Text>
       </SafeAreaView>
     );
   }
@@ -88,6 +168,55 @@ function LoadsScreen() {
     <SafeAreaView style={styles.container}>
       <AppHeader text="Loads Dashboard" />
 
+      {/* ── Radius filter pill row ── */}
+      <View style={styles.filterSection}>
+        <Text style={styles.filterHeading}>
+          {locationGranted ? "Nearby range" : "Showing"}
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.pillRow}
+        >
+          {RADIUS_OPTIONS.map((opt) => {
+            const isDisabled = opt.value !== null && !locationGranted;
+            const isActive = selectedRadius === opt.value;
+
+            return (
+              <TouchableOpacity
+                key={String(opt.value)}
+                style={[
+                  styles.pill,
+                  isActive && styles.pillActive,
+                  isDisabled && styles.pillDisabled,
+                ]}
+                onPress={() => !isDisabled && handleRadiusSelect(opt.value)}
+                activeOpacity={isDisabled ? 1 : 0.75}
+              >
+                <Text
+                  style={[
+                    styles.pillText,
+                    isActive && styles.pillTextActive,
+                    isDisabled && styles.pillTextDisabled,
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {/* Result count badge */}
+        {!loading && (
+          <View style={styles.countBadge}>
+            <Text style={styles.countText}>
+              {loads.length} load{loads.length !== 1 ? "s" : ""}
+            </Text>
+          </View>
+        )}
+      </View>
+
       <FlatList
         data={loads}
         keyExtractor={(item) => item._id}
@@ -95,7 +224,7 @@ function LoadsScreen() {
         showsVerticalScrollIndicator={false}
         renderItem={({ item, index }) => (
           <View style={styles.card}>
-            {/* Top row: route + badge */}
+            {/* Top row */}
             <View style={styles.cardTop}>
               <View style={styles.routeRow}>
                 <View style={styles.routeStop}>
@@ -116,7 +245,6 @@ function LoadsScreen() {
                   </Text>
                 </View>
               </View>
-
               <View style={styles.indexBadge}>
                 <Text style={styles.indexText}>
                   {String(index + 1).padStart(2, "0")}
@@ -170,12 +298,36 @@ function LoadsScreen() {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <View style={styles.emptyIconWrap}>
-              <Text style={styles.emptyIcon}>📦</Text>
+              <Text style={styles.emptyIcon}>
+                {selectedRadius !== null ? "📍" : "📦"}
+              </Text>
             </View>
-            <Text style={styles.emptyTitle}>No loads available</Text>
-            <Text style={styles.emptySubtitle}>
-              New freight will appear here
+            <Text style={styles.emptyTitle}>
+              {selectedRadius !== null
+                ? `No loads within ${selectedRadius} km`
+                : "No loads available"}
             </Text>
+            <Text style={styles.emptySubtitle}>
+              {selectedRadius !== null
+                ? "Try a wider range below"
+                : "New freight will appear here"}
+            </Text>
+            {/* Quick-expand suggestions when empty */}
+            {selectedRadius !== null && (
+              <View style={styles.emptyPillRow}>
+                {RADIUS_OPTIONS.filter(
+                  (o) => o.value !== null && o.value > (selectedRadius ?? 0),
+                ).map((o) => (
+                  <TouchableOpacity
+                    key={String(o.value)}
+                    style={styles.emptyPill}
+                    onPress={() => handleRadiusSelect(o.value)}
+                  >
+                    <Text style={styles.emptyPillText}>Try {o.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         }
         ListFooterComponent={
@@ -201,10 +353,7 @@ function LoadsScreen() {
 export default LoadsScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
+  container: { flex: 1, backgroundColor: C.bg },
   centered: {
     flex: 1,
     backgroundColor: C.bg,
@@ -219,15 +368,74 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
 
-  // List
+  // ── Filter section ──────────────────────────────────────────────────────
+  filterSection: {
+    paddingTop: 16,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
+  },
+  filterHeading: {
+    paddingHorizontal: 18,
+    marginBottom: 10,
+    fontSize: 12,
+    fontWeight: "700",
+    color: C.textSecondary,
+    letterSpacing: 0.5,
+  },
+  pillRow: {
+    paddingHorizontal: 16,
+    gap: 8,
+    flexDirection: "row",
+  },
+  pill: {
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 100,
+    borderWidth: 1.5,
+    borderColor: C.border,
+    backgroundColor: C.bg,
+  },
+  pillActive: {
+    backgroundColor: C.accent,
+    borderColor: C.accent,
+  },
+  pillDisabled: {
+    backgroundColor: C.surfaceSunken,
+    borderColor: C.border,
+    opacity: 0.45,
+  },
+  pillText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: C.textSecondary,
+  },
+  pillTextActive: {
+    color: "#fff",
+  },
+  pillTextDisabled: {
+    color: C.textMuted,
+  },
+  countBadge: {
+    alignSelf: "flex-start",
+    marginHorizontal: 18,
+    marginTop: 10,
+  },
+  countText: {
+    fontSize: 12,
+    color: C.textMuted,
+    fontWeight: "600",
+  },
+
+  // ── List ────────────────────────────────────────────────────────────────
   list: {
     padding: 16,
-    paddingTop: 20,
+    paddingTop: 14,
     paddingBottom: 48,
     gap: 14,
   },
 
-  // Card
+  // ── Card ────────────────────────────────────────────────────────────────
   card: {
     backgroundColor: C.surface,
     borderRadius: 22,
@@ -248,19 +456,8 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     gap: 8,
   },
-
-  // Route
-  routeRow: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  routeStop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flex: 1,
-  },
+  routeRow: { flex: 1, flexDirection: "row", alignItems: "center" },
+  routeStop: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1 },
   dotOrigin: {
     width: 9,
     height: 9,
@@ -285,17 +482,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     gap: 2,
   },
-  routeDash: {
-    width: 8,
-    height: 1,
-    backgroundColor: C.border,
-  },
-  routeArrow: {
-    color: C.textMuted,
-    fontSize: 16,
-  },
-
-  // Index badge
+  routeDash: { width: 8, height: 1, backgroundColor: C.border },
+  routeArrow: { color: C.textMuted, fontSize: 16 },
   indexBadge: {
     backgroundColor: C.surfaceSunken,
     borderRadius: 8,
@@ -310,8 +498,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 1,
   },
-
-  // Stats strip — sunken background to contrast with white card
   statsStrip: {
     flexDirection: "row",
     alignItems: "center",
@@ -322,33 +508,16 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginBottom: 14,
   },
-  statBlock: {
-    flex: 1,
-    alignItems: "center",
-    gap: 4,
-  },
-  statDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: C.border,
-  },
+  statBlock: { flex: 1, alignItems: "center", gap: 4 },
+  statDivider: { width: 1, height: 28, backgroundColor: C.border },
   statLabel: {
     color: C.textMuted,
     fontSize: 9,
     fontWeight: "700",
     letterSpacing: 1.5,
   },
-  statValue: {
-    color: C.textPrimary,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  priceValue: {
-    color: C.price,
-    fontWeight: "700",
-  },
-
-  // Accept button
+  statValue: { color: C.textPrimary, fontSize: 13, fontWeight: "600" },
+  priceValue: { color: C.price, fontWeight: "700" },
   acceptBtn: {
     backgroundColor: C.accent,
     marginHorizontal: 16,
@@ -360,22 +529,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  acceptBtnDisabled: {
-    backgroundColor: C.accentSoft,
-  },
+  acceptBtnDisabled: { backgroundColor: C.accentSoft },
   acceptBtnText: {
     color: "#fff",
     fontSize: 14,
     fontWeight: "700",
     letterSpacing: 0.3,
   },
-  acceptBtnArrow: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
+  acceptBtnArrow: { color: "#fff", fontSize: 16, fontWeight: "700" },
 
-  // Footer
+  // ── Footer ──────────────────────────────────────────────────────────────
   footer: {
     flexDirection: "row",
     alignItems: "center",
@@ -383,11 +546,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 12,
   },
-  footerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: C.border,
-  },
+  footerLine: { flex: 1, height: 1, backgroundColor: C.border },
   footerText: {
     color: C.textMuted,
     fontSize: 10,
@@ -395,12 +554,8 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
 
-  // Empty state
-  emptyState: {
-    alignItems: "center",
-    paddingTop: 80,
-    gap: 10,
-  },
+  // ── Empty state ──────────────────────────────────────────────────────────
+  emptyState: { alignItems: "center", paddingTop: 80, gap: 10 },
   emptyIconWrap: {
     width: 72,
     height: 72,
@@ -413,13 +568,20 @@ const styles = StyleSheet.create({
     borderColor: C.border,
   },
   emptyIcon: { fontSize: 32 },
-  emptyTitle: {
-    color: C.textPrimary,
-    fontSize: 18,
-    fontWeight: "700",
+  emptyTitle: { color: C.textPrimary, fontSize: 18, fontWeight: "700" },
+  emptySubtitle: { color: C.textSecondary, fontSize: 13 },
+  emptyPillRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+    flexWrap: "wrap",
+    justifyContent: "center",
   },
-  emptySubtitle: {
-    color: C.textSecondary,
-    fontSize: 13,
+  emptyPill: {
+    backgroundColor: C.accentLight,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 100,
   },
+  emptyPillText: { color: C.accent, fontWeight: "700", fontSize: 13 },
 });
