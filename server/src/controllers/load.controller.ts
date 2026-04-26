@@ -6,22 +6,35 @@ export class LoadController {
   public async getLoads(req: Request, res: Response) {
     const rawPage = req.query.page;
     const rawLimit = req.query.limit;
-    const page =
-      rawPage === undefined || rawPage === null || rawPage === ""
-        ? 1
-        : Number(rawPage);
-    const limit =
-      rawLimit === undefined || rawLimit === null || rawLimit === ""
-        ? 10
-        : Number(rawLimit);
+    const rawLat = req.query.lat;
+    const rawLng = req.query.lng;
+    const rawRadius = req.query.radius;
 
-    const loads = await loadServ.getPendingLoads(page, limit);
-    res.status(StatusCodes.OK).json({ success: true, data: loads });
+    const page = rawPage === undefined || rawPage === "" ? 1 : Number(rawPage);
+    const limit =
+      rawLimit === undefined || rawLimit === "" ? 10 : Number(rawLimit);
+
+    const lat =
+      rawLat !== undefined && rawLat !== "" ? Number(rawLat) : undefined;
+    const lng =
+      rawLng !== undefined && rawLng !== "" ? Number(rawLng) : undefined;
+    const radius =
+      rawRadius !== undefined && rawRadius !== "" ? Number(rawRadius) : 10;
+
+    const result = await loadServ.getPendingLoads(
+      page,
+      limit,
+      lat,
+      lng,
+      radius,
+    );
+
+    res.status(StatusCodes.OK).json({ success: true, data: result });
   }
 
   public async acceptLoad(req: Request, res: Response) {
     const { id } = req.params;
-    const driverId = req.body.driverId;
+    const { driverId } = req.body;
     const load = await loadServ.acceptLoad(String(id), String(driverId));
     res.status(StatusCodes.OK).json({ success: true, data: load });
   }
